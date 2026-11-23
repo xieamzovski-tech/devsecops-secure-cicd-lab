@@ -1,0 +1,10 @@
+title = "DevSecOps Lab Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "lab-fake-aws-access-key"
+description = "Detect the fake AWS access key planted for this lab"
+regex = '''AKIAIOSFODNN7EXAMPLE'''
+keywords = ["AKIA"]
