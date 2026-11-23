@@ -59,6 +59,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Scan dependencies with Trivy
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            aquasec/trivy:latest \
+            fs --scanners vuln --exit-code 0 /repo
+
+
+    steps:
+      - name: Check out repository
+        # actions/checkout v4.2.2, pinned to a full commit SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
       - name: Scan repository history with Gitleaks
         run: |
           docker run --rm \
