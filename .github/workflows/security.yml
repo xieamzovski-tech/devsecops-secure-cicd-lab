@@ -59,9 +59,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Scan dependencies with Trivy
+      - name: Scan repository history with Gitleaks
         run: |
           docker run --rm \
             -v "${{ github.workspace }}:/repo" \
-            aquasec/trivy:latest \
-            fs --scanners vuln --exit-code 0 /repo
+            zricethezav/gitleaks:latest \
+            detect \
+            --source /repo \
+            --config /repo/.gitleaks.toml \
+            --exit-code 1 \
+            --verbose \
+            --redact
