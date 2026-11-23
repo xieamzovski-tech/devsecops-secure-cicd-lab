@@ -1,0 +1,67 @@
+name: Security Pipeline
+
+on:
+  push:
+  pull_request:
+
+# Least privilege for the workflow's GITHUB_TOKEN.
+permissions:
+  contents: read
+
+jobs:
+  gitleaks-gate:
+    name: Gitleaks Secret Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        # actions/checkout v4.2.2, pinned to a full commit SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan repository history with Gitleaks
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            zricethezav/gitleaks:latest \
+            detect --source /repo --exit-code 1 --verbose
+
+  semgrep-report:
+    name: Semgrep SAST Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        # actions/checkout v4.2.2, pinned to a full commit SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Install Semgrep
+        run: python -m pip install semgrep
+
+      - name: Run Semgrep as a report
+        run: semgrep scan --config auto --verbose .
+
+  trivy-report:
+    name: Trivy Dependency Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        # actions/checkout v4.2.2, pinned to a full commit SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Scan dependencies with Trivy
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            aquasec/trivy:latest \
+            fs --scanners vuln --exit-code 0 /repo
